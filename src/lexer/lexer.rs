@@ -49,7 +49,7 @@ impl LexerTrait for Lexer {
         } else {
             self.ch = self.input.as_bytes()[self.read_position];
         }
-        dbg!(&self.input[self.position..]);
+        // dbg!(&self.input[self.position..]);
         self.position = self.read_position;
         self.read_position += 1;
     }

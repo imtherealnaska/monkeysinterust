@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 pub type TokenType = String;
 
+#[derive(Debug)]
 pub struct Token {
     pub type_: String,
     pub literal: String,
