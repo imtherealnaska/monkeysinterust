@@ -16,6 +16,7 @@ pub trait LexerTrait {
     fn next_token(&mut self) -> Token;
     fn read_identifier(&mut self) -> String;
     fn skip_whitespace(&mut self);
+    fn peek_char(&self) -> u8;
 }
 
 fn is_letter(ch: u8) -> bool {
@@ -55,20 +56,35 @@ impl LexerTrait for Lexer {
 
     fn next_token(&mut self) -> Token {
         self.skip_whitespace();
-        println!("once");
         let tok = match self.ch {
-            b'=' => Token::new(&Tokens::Assign.to_string(), "="),
-            b';' => {
-                print!("reading ;");
-                Token::new(&Tokens::Semicolon.to_string(), ";")
+            b'=' => {
+                if self.peek_char() == b'=' {
+                    // let ch = self.ch;
+                    self.read_char();
+                    let literal = "==".to_string();
+                    Token::new(&Tokens::EQ.to_string(), &literal)
+                } else {
+                    Token::new(&Tokens::Assign.to_string(), "=")
+                }
             }
+            b';' => Token::new(&Tokens::Semicolon.to_string(), ";"),
             b'(' => Token::new(&Tokens::LParen.to_string(), "("),
             b')' => Token::new(&Tokens::RParen.to_string(), ")"),
             b',' => Token::new(&Tokens::Comma.to_string(), ","),
             b'+' => Token::new(&Tokens::Plus.to_string(), "+"),
             b'{' => Token::new(&Tokens::LBrace.to_string(), "{"),
             b'}' => Token::new(&Tokens::RBrace.to_string(), "}"),
-            b'!' => Token::new(&Tokens::BANG.to_string(), "!"),
+            b'!' => {
+                if self.peek_char() == b'=' {
+                    // let ch = self.ch;
+                    self.read_char();
+                    // let literal = ch.to_string() + &self.ch.to_string();
+                    let literal = "!=".to_string();
+                    Token::new(&Tokens::NotEq.to_string(), &literal)
+                } else {
+                    Token::new(&Tokens::BANG.to_string(), "!")
+                }
+            }
             b'*' => Token::new(&Tokens::ASTERISK.to_string(), "*"),
             b'<' => Token::new(&Tokens::LT.to_string(), "<"),
             b'>' => Token::new(&Tokens::GT.to_string(), ">"),
@@ -114,6 +130,14 @@ impl LexerTrait for Lexer {
             } else {
                 break;
             }
+        }
+    }
+
+    fn peek_char(&self) -> u8 {
+        if self.read_position >= self.input.len() {
+            0
+        } else {
+            self.input.as_bytes()[self.read_position]
         }
     }
 }

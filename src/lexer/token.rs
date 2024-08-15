@@ -53,6 +53,8 @@ pub enum Tokens {
     SLASH,
     LT,
     GT,
+    EQ,
+    NotEq,
     // Delimiters
     Comma,
     Semicolon,
@@ -98,6 +100,8 @@ impl std::fmt::Display for Tokens {
             Tokens::If => write!(f, "if"),
             Tokens::Else => write!(f, "else"),
             Tokens::Return => write!(f, "return"),
+            Tokens::EQ => write!(f, "=="),
+            Tokens::NotEq => write!(f, "!="),
         }
     }
 }
@@ -124,7 +128,9 @@ mod tests {
             } else {
             return false;
             }
-            ";
+
+            10 == 10 ;
+            10 != 9 ;";
 
         let tests = vec![
             (Tokens::Let, "let"),
@@ -182,6 +188,14 @@ mod tests {
             (Tokens::False, "false"),
             (Tokens::Semicolon, ";"),
             (Tokens::RBrace, "}"),
+            (Tokens::Int("10".to_string()), "10"),
+            (Tokens::EQ, "=="),
+            (Tokens::Int("10".to_string()), "10"),
+            (Tokens::Semicolon, ";"),
+            (Tokens::Int("10".to_string()), "10"),
+            (Tokens::NotEq, "!="),
+            (Tokens::Int("9".to_string()), "9"),
+            (Tokens::Semicolon, ";"),
             (Tokens::Eof, ""),
         ];
 
