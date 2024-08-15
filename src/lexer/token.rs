@@ -11,6 +11,11 @@ pub fn keywords() -> HashMap<String, Tokens> {
     let mut keywords = HashMap::new();
     keywords.insert("fn".to_string(), Tokens::Function);
     keywords.insert("let".to_string(), Tokens::Let);
+    keywords.insert("true".to_string(), Tokens::True);
+    keywords.insert("false".to_string(), Tokens::False);
+    keywords.insert("if".to_string(), Tokens::If);
+    keywords.insert("else".to_string(), Tokens::Else);
+    keywords.insert("return".to_string(), Tokens::Return);
     keywords
 }
 
@@ -58,6 +63,11 @@ pub enum Tokens {
     // Keywords
     Function,
     Let,
+    True,
+    False,
+    If,
+    Else,
+    Return,
 }
 
 impl std::fmt::Display for Tokens {
@@ -83,6 +93,11 @@ impl std::fmt::Display for Tokens {
             Tokens::SLASH => write!(f, "/"),
             Tokens::LT => write!(f, "<"),
             Tokens::GT => write!(f, ">"),
+            Tokens::True => write!(f, "true"),
+            Tokens::False => write!(f, "false"),
+            Tokens::If => write!(f, "if"),
+            Tokens::Else => write!(f, "else"),
+            Tokens::Return => write!(f, "return"),
         }
     }
 }
@@ -103,6 +118,12 @@ mod tests {
             };
             !-/*5;
             5 < 10 >5 ;
+
+            if (5 < 10) {
+            return true;
+            } else {
+            return false;
+            }
             ";
 
         let tests = vec![
@@ -144,6 +165,23 @@ mod tests {
             (Tokens::GT, ">"),
             (Tokens::Int("5".to_string()), "5"),
             (Tokens::Semicolon, ";"),
+            (Tokens::If, "if"),
+            (Tokens::LParen, "("),
+            (Tokens::Int("5".to_string()), "5"),
+            (Tokens::LT, "<"),
+            (Tokens::Int("10".to_string()), "10"),
+            (Tokens::RParen, ")"),
+            (Tokens::LBrace, "{"),
+            (Tokens::Return, "return"),
+            (Tokens::True, "true"),
+            (Tokens::Semicolon, ";"),
+            (Tokens::RBrace, "}"),
+            (Tokens::Else, "else"),
+            (Tokens::LBrace, "{"),
+            (Tokens::Return, "return"),
+            (Tokens::False, "false"),
+            (Tokens::Semicolon, ";"),
+            (Tokens::RBrace, "}"),
             (Tokens::Eof, ""),
         ];
 
