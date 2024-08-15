@@ -6,7 +6,7 @@ pub(crate) struct Lexer {
     input: String,
     position: usize,
     read_position: usize,
-    ch: Option<char>,
+    ch: u8,
 }
 
 pub trait LexerTrait {
@@ -18,18 +18,14 @@ pub trait LexerTrait {
     fn skip_whitespace(&mut self);
 }
 
-fn is_letter(ch: char) -> bool {
-    ch.is_alphanumeric() || ch == '_'
-}
-
-fn is_digit(ch: char) -> bool {
-    ch.is_ascii_digit()
+fn is_letter(ch: u8) -> bool {
+    ch.is_ascii_alphanumeric() || ch == b'_'
 }
 
 impl LexerTrait for Lexer {
     fn read_number(&mut self) -> String {
         let pos = self.position;
-        while is_digit(self.ch.unwrap()) {
+        while self.ch.is_ascii_digit() {
             self.read_char();
         }
         self.input[pos..self.position].to_string()
@@ -40,7 +36,7 @@ impl LexerTrait for Lexer {
             input: input.to_string(),
             position: 0,
             read_position: 0,
-            ch: None,
+            ch: 0,
         };
         lexer.read_char();
         lexer
@@ -48,9 +44,9 @@ impl LexerTrait for Lexer {
 
     fn read_char(&mut self) {
         if self.read_position >= self.input.len() {
-            self.ch = None;
+            self.ch = 0;
         } else {
-            self.ch = self.input[self.read_position..].chars().next();
+            self.ch = self.input.as_bytes()[self.read_position];
         }
         dbg!(&self.input[self.position..]);
         self.position = self.read_position;
@@ -61,20 +57,27 @@ impl LexerTrait for Lexer {
         self.skip_whitespace();
         println!("once");
         let tok = match self.ch {
-            Some('=') => Token::new(&Tokens::Assign.to_string(), "="),
-            Some(';') => {
+            b'=' => Token::new(&Tokens::Assign.to_string(), "="),
+            b';' => {
                 print!("reading ;");
                 Token::new(&Tokens::Semicolon.to_string(), ";")
             }
-            Some('(') => Token::new(&Tokens::LParen.to_string(), "("),
-            Some(')') => Token::new(&Tokens::RParen.to_string(), ")"),
-            Some(',') => Token::new(&Tokens::Comma.to_string(), ","),
-            Some('+') => Token::new(&Tokens::Plus.to_string(), "+"),
-            Some('{') => Token::new(&Tokens::LBrace.to_string(), "{"),
-            Some('}') => Token::new(&Tokens::RBrace.to_string(), "}"),
-            Some(ch) if is_letter(ch) => {
+            b'(' => Token::new(&Tokens::LParen.to_string(), "("),
+            b')' => Token::new(&Tokens::RParen.to_string(), ")"),
+            b',' => Token::new(&Tokens::Comma.to_string(), ","),
+            b'+' => Token::new(&Tokens::Plus.to_string(), "+"),
+            b'{' => Token::new(&Tokens::LBrace.to_string(), "{"),
+            b'}' => Token::new(&Tokens::RBrace.to_string(), "}"),
+            b'!' => Token::new(&Tokens::BANG.to_string(), "!"),
+            b'*' => Token::new(&Tokens::ASTERISK.to_string(), "*"),
+            b'<' => Token::new(&Tokens::LT.to_string(), "<"),
+            b'>' => Token::new(&Tokens::GT.to_string(), ">"),
+            b'/' => Token::new(&Tokens::SLASH.to_string(), "/"),
+            b'-' => Token::new(&Tokens::MINUS.to_string(), "-"),
+            _c if is_letter(self.ch) => {
                 let literal = self.read_identifier();
                 //can use lookup_ident() but this seems ok
+                //TODO: Check why this works
                 let _type = lookup_ident(&literal);
                 // match literal.as_str() {
                 //     "let" => Token::new(&Tokens::Let.to_string(), &literal),
@@ -83,16 +86,13 @@ impl LexerTrait for Lexer {
                 // }
                 return Token::new(&_type.to_string(), &literal);
             }
-            Some(ch) if is_digit(ch) => {
+            _ch if self.ch.is_ascii_digit() => {
                 let literal = self.read_number();
                 Token::new(&Tokens::Int(literal.clone()).to_string(), &literal)
             }
 
-            None => Token::new(&Tokens::Eof.to_string(), ""),
-            _ => Token::new(
-                &Tokens::Illegal.to_string(),
-                &self.ch.unwrap_or('\0').to_string(),
-            ),
+            b'\0' => Token::new(&Tokens::Eof.to_string(), ""),
+            _ => Token::new(&Tokens::Illegal.to_string(), "ILLEGAL"),
         };
         self.read_char();
         tok
@@ -100,15 +100,15 @@ impl LexerTrait for Lexer {
 
     fn read_identifier(&mut self) -> String {
         let pos = self.position;
-        while is_letter(self.ch.unwrap()) {
+        while is_letter(self.ch) {
             self.read_char();
         }
         String::from(&self.input[pos..self.position])
     }
 
     fn skip_whitespace(&mut self) {
-        while let Some(ch) = self.ch {
-            if ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r' {
+        loop {
+            if self.ch == b' ' || self.ch == b'\t' || self.ch == b'\n' || self.ch == b'\r' {
                 println!("skipping whitespace");
                 self.read_char();
             } else {
