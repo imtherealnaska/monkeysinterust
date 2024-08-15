@@ -1,3 +1,5 @@
+use crate::lexer::token::lookup_ident;
+
 use super::token::{Token, Tokens};
 
 pub(crate) struct Lexer {
@@ -73,11 +75,13 @@ impl LexerTrait for Lexer {
             Some(ch) if is_letter(ch) => {
                 let literal = self.read_identifier();
                 //can use lookup_ident() but this seems ok
-                match literal.as_str() {
-                    "let" => Token::new(&Tokens::Let.to_string(), &literal),
-                    "fn" => Token::new(&Tokens::Function.to_string(), &literal),
-                    _ => Token::new(&Tokens::Ident(literal.clone()).to_string(), &literal),
-                }
+                let _type = lookup_ident(&literal);
+                // match literal.as_str() {
+                //     "let" => Token::new(&Tokens::Let.to_string(), &literal),
+                //     "fn" => Token::new(&Tokens::Function.to_string(), &literal),
+                //     _ => Token::new(&Tokens::Ident(literal.clone()).to_string(), &literal),
+                // }
+                return Token::new(&_type.to_string(), &literal);
             }
             Some(ch) if is_digit(ch) => {
                 let literal = self.read_number();
