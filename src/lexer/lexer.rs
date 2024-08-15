@@ -20,15 +20,14 @@ fn is_letter(ch: char) -> bool {
     ch.is_alphanumeric() || ch == '_'
 }
 
-fn is_digit(ch: Option<char>) -> bool {
-    let dif = ch.unwrap();
-    dif.is_ascii_digit()
+fn is_digit(ch: char) -> bool {
+    ch.is_ascii_digit()
 }
 
 impl LexerTrait for Lexer {
     fn read_number(&mut self) -> String {
         let pos = self.position;
-        while is_digit(self.ch) {
+        while is_digit(self.ch.unwrap()) {
             self.read_char();
         }
         self.input[pos..self.position].to_string()
@@ -57,42 +56,39 @@ impl LexerTrait for Lexer {
     }
 
     fn next_token(&mut self) -> Token {
-        let tok;
         self.skip_whitespace();
         println!("once");
-        match self.ch {
-            Some('=') => tok = Token::new(&Tokens::Assign.to_string(), "="),
+        let tok = match self.ch {
+            Some('=') => Token::new(&Tokens::Assign.to_string(), "="),
             Some(';') => {
                 print!("reading ;");
-                tok = Token::new(&Tokens::Semicolon.to_string(), ";")
+                Token::new(&Tokens::Semicolon.to_string(), ";")
             }
-            Some('(') => tok = Token::new(&Tokens::LParen.to_string(), "("),
-            Some(')') => tok = Token::new(&Tokens::RParen.to_string(), ")"),
-            Some(',') => tok = Token::new(&Tokens::Comma.to_string(), ","),
-            Some('+') => tok = Token::new(&Tokens::Plus.to_string(), "+"),
-            Some('{') => tok = Token::new(&Tokens::LBrace.to_string(), "{"),
-            Some('}') => tok = Token::new(&Tokens::RBrace.to_string(), "}"),
+            Some('(') => Token::new(&Tokens::LParen.to_string(), "("),
+            Some(')') => Token::new(&Tokens::RParen.to_string(), ")"),
+            Some(',') => Token::new(&Tokens::Comma.to_string(), ","),
+            Some('+') => Token::new(&Tokens::Plus.to_string(), "+"),
+            Some('{') => Token::new(&Tokens::LBrace.to_string(), "{"),
+            Some('}') => Token::new(&Tokens::RBrace.to_string(), "}"),
             Some(ch) if is_letter(ch) => {
                 let literal = self.read_identifier();
                 //can use lookup_ident() but this seems ok
-                tok = match literal.as_str() {
+                match literal.as_str() {
                     "let" => Token::new(&Tokens::Let.to_string(), &literal),
                     "fn" => Token::new(&Tokens::Function.to_string(), &literal),
                     _ => Token::new(&Tokens::Ident(literal.clone()).to_string(), &literal),
-                };
+                }
             }
-            Some(ch) if ch.is_digit(10) => {
+            Some(ch) if is_digit(ch) => {
                 let literal = self.read_number();
-                tok = Token::new(&Tokens::Int(literal.clone()).to_string(), &literal);
+                Token::new(&Tokens::Int(literal.clone()).to_string(), &literal)
             }
 
-            None => tok = Token::new(&Tokens::Eof.to_string(), ""),
-            _ => {
-                tok = Token::new(
-                    &Tokens::Illegal.to_string(),
-                    &self.ch.unwrap_or('\0').to_string(),
-                )
-            }
+            None => Token::new(&Tokens::Eof.to_string(), ""),
+            _ => Token::new(
+                &Tokens::Illegal.to_string(),
+                &self.ch.unwrap_or('\0').to_string(),
+            ),
         };
         self.read_char();
         tok
@@ -108,11 +104,7 @@ impl LexerTrait for Lexer {
 
     fn skip_whitespace(&mut self) {
         while let Some(ch) = self.ch {
-            if self.ch == Some(' ')
-                || self.ch == Some('\t')
-                || self.ch == Some('\n')
-                || self.ch == Some('\r')
-            {
+            if ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r' {
                 println!("skipping whitespace");
                 self.read_char();
             } else {
