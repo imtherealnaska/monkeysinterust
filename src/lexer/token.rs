@@ -42,6 +42,12 @@ pub enum Tokens {
     // Operators
     Assign,
     Plus,
+    MINUS,
+    BANG,
+    ASTERISK,
+    SLASH,
+    LT,
+    GT,
     // Delimiters
     Comma,
     Semicolon,
@@ -71,6 +77,12 @@ impl std::fmt::Display for Tokens {
             Tokens::RBrace => write!(f, "}}"),
             Tokens::Function => write!(f, "FUNCTION"),
             Tokens::Let => write!(f, "LET"),
+            Tokens::MINUS => write!(f, "-"),
+            Tokens::BANG => write!(f, "!"),
+            Tokens::ASTERISK => write!(f, "*"),
+            Tokens::SLASH => write!(f, "/"),
+            Tokens::LT => write!(f, "<"),
+            Tokens::GT => write!(f, ">"),
         }
     }
 }
@@ -88,7 +100,10 @@ mod tests {
             let ten = 10 ;
             let add = fn ( x , y ) {
             x + y ;
-            } ;";
+            };
+            !-/*5;
+            5 < 10 >5 ;
+            ";
 
         let tests = vec![
             (Tokens::Let, "let"),
@@ -116,6 +131,18 @@ mod tests {
             (Tokens::Ident("y".to_string()), "y"),
             (Tokens::Semicolon, ";"),
             (Tokens::RBrace, "}"),
+            (Tokens::Semicolon, ";"),
+            (Tokens::BANG, "!"),
+            (Tokens::MINUS, "-"),
+            (Tokens::SLASH, "/"),
+            (Tokens::ASTERISK, "*"),
+            (Tokens::Int("5".to_string()), "5"),
+            (Tokens::Semicolon, ";"),
+            (Tokens::Int("5".to_string()), "5"),
+            (Tokens::LT, "<"),
+            (Tokens::Int("10".to_string()), "10"),
+            (Tokens::GT, ">"),
+            (Tokens::Int("5".to_string()), "5"),
             (Tokens::Semicolon, ";"),
             (Tokens::Eof, ""),
         ];
