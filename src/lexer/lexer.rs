@@ -59,48 +59,49 @@ impl LexerTrait for Lexer {
         let tok = match self.ch {
             b'=' => {
                 if self.peek_char() == b'=' {
-                    // let ch = self.ch;
                     self.read_char();
-                    let literal = "==".to_string();
-                    Token::new(&Tokens::EQ.to_string(), &literal)
+                    // let literal = "==".to_string();
+                    Token::new("EQ", "==")
                 } else {
-                    Token::new(&Tokens::Assign.to_string(), "=")
+                    Token::new("Assign", "=")
                 }
             }
-            b';' => Token::new(&Tokens::Semicolon.to_string(), ";"),
-            b'(' => Token::new(&Tokens::LParen.to_string(), "("),
-            b')' => Token::new(&Tokens::RParen.to_string(), ")"),
-            b',' => Token::new(&Tokens::Comma.to_string(), ","),
-            b'+' => Token::new(&Tokens::Plus.to_string(), "+"),
-            b'{' => Token::new(&Tokens::LBrace.to_string(), "{"),
-            b'}' => Token::new(&Tokens::RBrace.to_string(), "}"),
+            b';' => Token::new("Semicolon", ";"),
+            b'(' => Token::new("LParen", "("),
+            b')' => Token::new("RParen", ")"),
+            b',' => Token::new("Comma", ","),
+            b'+' => Token::new("Plus", "+"),
+            b'{' => Token::new("LBrace", "{"),
+            b'}' => Token::new("RBrace", "}"),
             b'!' => {
                 if self.peek_char() == b'=' {
                     // let ch = self.ch;
                     self.read_char();
                     // let literal = ch.to_string() + &self.ch.to_string();
                     let literal = "!=".to_string();
-                    Token::new(&Tokens::NotEq.to_string(), &literal)
+                    Token::new("NotEq", &literal)
                 } else {
-                    Token::new(&Tokens::BANG.to_string(), "!")
+                    Token::new("BANG", "!")
                 }
             }
-            b'*' => Token::new(&Tokens::ASTERISK.to_string(), "*"),
-            b'<' => Token::new(&Tokens::LT.to_string(), "<"),
-            b'>' => Token::new(&Tokens::GT.to_string(), ">"),
-            b'/' => Token::new(&Tokens::SLASH.to_string(), "/"),
-            b'-' => Token::new(&Tokens::MINUS.to_string(), "-"),
+            b'*' => Token::new("ASTERISK", "*"),
+            b'<' => Token::new("LT", "<"),
+            b'>' => Token::new("GT", ">"),
+            b'/' => Token::new("SLASH", "/"),
+            b'-' => Token::new("MINUS", "-"),
             _c if is_letter(self.ch) => {
                 let literal = self.read_identifier();
                 //can use lookup_ident() but this seems ok
                 //TODO: Check why this works
-                let _type = lookup_ident(&literal);
-                // match literal.as_str() {
-                //     "let" => Token::new(&Tokens::Let.to_string(), &literal),
-                //     "fn" => Token::new(&Tokens::Function.to_string(), &literal),
-                //     _ => Token::new(&Tokens::Ident(literal.clone()).to_string(), &literal),
-                // }
-                return Token::new(&_type.to_string(), &literal);
+                // let _type = lookup_ident(&literal);
+                // println!("literal {literal}");
+                // println!("type {_type}");
+                match literal.as_str() {
+                    "let" => Token::new("Let", &literal),
+                    "fn" => Token::new("Function", &literal),
+                    _ => Token::new("Ident", &literal),
+                }
+                // return Token::new(&_type.to_string(), &literal);
             }
             _ch if self.ch.is_ascii_digit() => {
                 let literal = self.read_number();
