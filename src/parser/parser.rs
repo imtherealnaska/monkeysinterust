@@ -15,9 +15,11 @@ pub(crate) struct Parser {
 }
 impl Parser {
     fn parse_let_statement(&mut self) -> Option<Rc<LetStatement>> {
+        println!("parsing let statement");
         let token = self.cur_token.clone();
 
         if !self.expect_peek(TokenType::Ident) {
+            println!("expected ident , got {:?}", self.peek_token);
             return None;
         }
 
@@ -86,7 +88,9 @@ impl ParserTrait for Parser {
     }
 
     fn next_token(&mut self) {
-        self.cur_token = std::mem::replace(&mut self.peek_token, self.l.next_token());
+        self.cur_token = self.peek_token.clone();
+        self.peek_token = self.l.next_token();
+        println!("Advanced to token: {:?}", self.cur_token);
     }
 
     fn parse_program(&mut self) -> Program {
@@ -96,9 +100,14 @@ impl ParserTrait for Parser {
         while self.cur_token.type_ != TokenType::Eof {
             if let Some(stmt) = self.parse_statement() {
                 program.statements.push(stmt);
+                println!(
+                    "Parsed statement. Total statements: {}",
+                    program.statements.len()
+                );
             }
             self.next_token();
         }
+        println!("{:?}", program);
         program
     }
 
@@ -125,11 +134,14 @@ mod tests {
         let input = "
 let x = 5;
 let y = 10;
-let foobar = 838383;
+let foobar = 838383 ;
 ";
 
+        println!("Lexer");
         let l = Lexer::new(input);
+        println!("parser");
         let mut p = Parser::new(l);
+        println!("program");
         let program = p.parse_program();
 
         assert_eq!(

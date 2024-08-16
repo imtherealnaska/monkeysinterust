@@ -89,3 +89,49 @@ impl Node for Identifier {
 impl Expression for Identifier {
     fn expression_node(&self) {}
 }
+
+use std::fmt;
+
+impl fmt::Debug for Program {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        writeln!(f, "Program {{")?;
+        writeln!(f, "  statements: [")?;
+        for (i, stmt) in self.statements.iter().enumerate() {
+            writeln!(f, "    {}: {:?},", i, stmt)?;
+        }
+        writeln!(f, "  ]")?;
+        write!(f, "}}")
+    }
+}
+
+// You'll also need to implement Debug for your Statement types
+impl fmt::Debug for dyn Statement {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Statement({})", self.token_literal())
+    }
+}
+
+// Implement Debug for LetStatement
+impl fmt::Debug for LetStatement {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "LetStatement {{ name: {:?}, value: {:?} }}",
+            self.name, self.value
+        )
+    }
+}
+
+// Implement Debug for Identifier
+impl fmt::Debug for Identifier {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Identifier({})", self.value)
+    }
+}
+
+// If you have an Expression trait, implement Debug for it as well
+impl fmt::Debug for dyn Expression {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Expression({})", self.token_literal())
+    }
+}

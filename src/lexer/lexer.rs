@@ -27,7 +27,7 @@ impl LexerTrait for Lexer {
         while self.ch.is_ascii_digit() {
             self.read_char();
         }
-        dbg!(&self.input[pos..self.position]);
+        // dbg!(&self.input[pos..self.position]);
         self.input[pos..self.position].to_string()
     }
 
@@ -123,7 +123,7 @@ impl LexerTrait for Lexer {
         while is_letter(self.ch) || self.ch.is_ascii_digit() {
             self.read_char();
         }
-        // dbg!(&self.input[pos..self.position]);
+        dbg!(&self.input[pos..self.position]);
         String::from_utf8_lossy(self.input[pos..self.position].as_bytes()).to_string()
     }
 
