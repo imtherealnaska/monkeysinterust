@@ -1,50 +1,50 @@
 use std::collections::HashMap;
 
-pub type TokenType = String;
+pub type TokenString = String;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Token {
-    pub type_: String,
+    pub type_: TokenType,
     pub literal: String,
 }
 
-pub fn keywords() -> HashMap<String, Tokens> {
+pub fn keywords() -> HashMap<String, TokenType> {
     let mut keywords = HashMap::new();
-    keywords.insert("fn".to_string(), Tokens::Function);
-    keywords.insert("let".to_string(), Tokens::Let);
-    keywords.insert("true".to_string(), Tokens::True);
-    keywords.insert("false".to_string(), Tokens::False);
-    keywords.insert("if".to_string(), Tokens::If);
-    keywords.insert("else".to_string(), Tokens::Else);
-    keywords.insert("return".to_string(), Tokens::Return);
+    keywords.insert("fn".to_string(), TokenType::Function);
+    keywords.insert("let".to_string(), TokenType::Let);
+    keywords.insert("true".to_string(), TokenType::True);
+    keywords.insert("false".to_string(), TokenType::False);
+    keywords.insert("if".to_string(), TokenType::If);
+    keywords.insert("else".to_string(), TokenType::Else);
+    keywords.insert("return".to_string(), TokenType::Return);
     keywords
 }
 
-pub fn lookup_ident(ident: &str) -> Tokens {
+pub fn lookup_ident(ident: &str) -> TokenType {
     let kw = keywords();
     if let Some(token_type) = kw.get(ident) {
         token_type.clone()
     } else {
-        Tokens::Ident(ident.to_string())
+        TokenType::Ident
     }
 }
 
 impl Token {
-    pub fn new(type_: &str, literal: &str) -> Self {
+    pub fn new(type_: TokenType, literal: &str) -> Self {
         Self {
-            type_: type_.to_string(),
+            type_,
             literal: literal.to_string(),
         }
     }
 }
 
 #[derive(Debug, PartialEq, Eq, Clone)]
-pub enum Tokens {
+pub enum TokenType {
     Illegal,
     Eof,
     // Identifiers + literals
-    Ident(String), // add, foobar, x, y, ...
-    Int(String),   // 1343456
+    Ident,
+    Int, // 1343456
     // Operators
     Assign,
     Plus,
@@ -73,36 +73,36 @@ pub enum Tokens {
     Return,
 }
 
-impl std::fmt::Display for Tokens {
+impl std::fmt::Display for TokenType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Tokens::Illegal => write!(f, "ILLEGAL"),
-            Tokens::Eof => write!(f, "EOF"),
-            Tokens::Ident(ident) => write!(f, "{}", ident),
-            Tokens::Int(int) => write!(f, "{}", int),
-            Tokens::Assign => write!(f, "="),
-            Tokens::Plus => write!(f, "+"),
-            Tokens::Comma => write!(f, ","),
-            Tokens::Semicolon => write!(f, ";"),
-            Tokens::LParen => write!(f, "("),
-            Tokens::RParen => write!(f, ")"),
-            Tokens::LBrace => write!(f, "{{"),
-            Tokens::RBrace => write!(f, "}}"),
-            Tokens::Function => write!(f, "FUNCTION"),
-            Tokens::Let => write!(f, "LET"),
-            Tokens::MINUS => write!(f, "-"),
-            Tokens::BANG => write!(f, "!"),
-            Tokens::ASTERISK => write!(f, "*"),
-            Tokens::SLASH => write!(f, "/"),
-            Tokens::LT => write!(f, "<"),
-            Tokens::GT => write!(f, ">"),
-            Tokens::True => write!(f, "true"),
-            Tokens::False => write!(f, "false"),
-            Tokens::If => write!(f, "if"),
-            Tokens::Else => write!(f, "else"),
-            Tokens::Return => write!(f, "return"),
-            Tokens::EQ => write!(f, "=="),
-            Tokens::NotEq => write!(f, "!="),
+            TokenType::Illegal => write!(f, "ILLEGAL"),
+            TokenType::Eof => write!(f, "EOF"),
+            TokenType::Ident => write!(f, "Ident"),
+            TokenType::Int => write!(f, "int"),
+            TokenType::Assign => write!(f, "="),
+            TokenType::Plus => write!(f, "+"),
+            TokenType::Comma => write!(f, ","),
+            TokenType::Semicolon => write!(f, ";"),
+            TokenType::LParen => write!(f, "("),
+            TokenType::RParen => write!(f, ")"),
+            TokenType::LBrace => write!(f, "{{"),
+            TokenType::RBrace => write!(f, "}}"),
+            TokenType::Function => write!(f, "FUNCTION"),
+            TokenType::Let => write!(f, "LET"),
+            TokenType::MINUS => write!(f, "-"),
+            TokenType::BANG => write!(f, "!"),
+            TokenType::ASTERISK => write!(f, "*"),
+            TokenType::SLASH => write!(f, "/"),
+            TokenType::LT => write!(f, "<"),
+            TokenType::GT => write!(f, ">"),
+            TokenType::True => write!(f, "true"),
+            TokenType::False => write!(f, "false"),
+            TokenType::If => write!(f, "if"),
+            TokenType::Else => write!(f, "else"),
+            TokenType::Return => write!(f, "return"),
+            TokenType::EQ => write!(f, "=="),
+            TokenType::NotEq => write!(f, "!="),
         }
     }
 }
@@ -116,88 +116,88 @@ mod tests {
 
     #[test]
     fn test_next_token() {
-        let input = "let five=5;
-            let ten = 10 ;
-            let add = fn ( x , y ) {
-            x + y ;
-            };
-            !-/*5;
-            5 < 10 >5 ;
+        let input = "let five=5 ;
+let ten = 10 ;
+let add = fn ( x , y ) {
+x + y ;
+};
+!-/*5 ;
+5 < 10 >5 ;
 
-            if (5 < 10) {
-            return true;
-            } else {
-            return false;
-            }
+if (5 < 10 ) {
+return true;
+} else {
+return false;
+}
 
-            10 == 10 ;
-            10 != 9 ;";
+10 == 10 ;
+10 != 9 ;";
 
         let tests = vec![
-            (Tokens::Let, "let"),
-            (Tokens::Ident("five".to_string()), "five"),
-            (Tokens::Assign, "="),
-            (Tokens::Int("5".to_string()), "5"),
-            (Tokens::Semicolon, ";"),
-            (Tokens::Let, "let"),
-            (Tokens::Ident("ten".to_string()), "ten"),
-            (Tokens::Assign, "="),
-            (Tokens::Int("10".to_string()), "10"),
-            (Tokens::Semicolon, ";"),
-            (Tokens::Let, "let"),
-            (Tokens::Ident("add".to_string()), "add"),
-            (Tokens::Assign, "="),
-            (Tokens::Function, "fn"),
-            (Tokens::LParen, "("),
-            (Tokens::Ident("x".to_string()), "x"),
-            (Tokens::Comma, ","),
-            (Tokens::Ident("y".to_string()), "y"),
-            (Tokens::RParen, ")"),
-            (Tokens::LBrace, "{"),
-            (Tokens::Ident("x".to_string()), "x"),
-            (Tokens::Plus, "+"),
-            (Tokens::Ident("y".to_string()), "y"),
-            (Tokens::Semicolon, ";"),
-            (Tokens::RBrace, "}"),
-            (Tokens::Semicolon, ";"),
-            (Tokens::BANG, "!"),
-            (Tokens::MINUS, "-"),
-            (Tokens::SLASH, "/"),
-            (Tokens::ASTERISK, "*"),
-            (Tokens::Int("5".to_string()), "5"),
-            (Tokens::Semicolon, ";"),
-            (Tokens::Int("5".to_string()), "5"),
-            (Tokens::LT, "<"),
-            (Tokens::Int("10".to_string()), "10"),
-            (Tokens::GT, ">"),
-            (Tokens::Int("5".to_string()), "5"),
-            (Tokens::Semicolon, ";"),
-            (Tokens::If, "if"),
-            (Tokens::LParen, "("),
-            (Tokens::Int("5".to_string()), "5"),
-            (Tokens::LT, "<"),
-            (Tokens::Int("10".to_string()), "10"),
-            (Tokens::RParen, ")"),
-            (Tokens::LBrace, "{"),
-            (Tokens::Return, "return"),
-            (Tokens::True, "true"),
-            (Tokens::Semicolon, ";"),
-            (Tokens::RBrace, "}"),
-            (Tokens::Else, "else"),
-            (Tokens::LBrace, "{"),
-            (Tokens::Return, "return"),
-            (Tokens::False, "false"),
-            (Tokens::Semicolon, ";"),
-            (Tokens::RBrace, "}"),
-            (Tokens::Int("10".to_string()), "10"),
-            (Tokens::EQ, "=="),
-            (Tokens::Int("10".to_string()), "10"),
-            (Tokens::Semicolon, ";"),
-            (Tokens::Int("10".to_string()), "10"),
-            (Tokens::NotEq, "!="),
-            (Tokens::Int("9".to_string()), "9"),
-            (Tokens::Semicolon, ";"),
-            (Tokens::Eof, ""),
+            (TokenType::Let, "let"),
+            (TokenType::Ident, "five"),
+            (TokenType::Assign, "="),
+            (TokenType::Int, "5"),
+            (TokenType::Semicolon, ";"),
+            (TokenType::Let, "let"),
+            (TokenType::Ident, "ten"),
+            (TokenType::Assign, "="),
+            (TokenType::Int, "10"),
+            (TokenType::Semicolon, ";"),
+            (TokenType::Let, "let"),
+            (TokenType::Ident, "add"),
+            (TokenType::Assign, "="),
+            (TokenType::Function, "fn"),
+            (TokenType::LParen, "("),
+            (TokenType::Ident, "x"),
+            (TokenType::Comma, ","),
+            (TokenType::Ident, "y"),
+            (TokenType::RParen, ")"),
+            (TokenType::LBrace, "{"),
+            (TokenType::Ident, "x"),
+            (TokenType::Plus, "+"),
+            (TokenType::Ident, "y"),
+            (TokenType::Semicolon, ";"),
+            (TokenType::RBrace, "}"),
+            (TokenType::Semicolon, ";"),
+            (TokenType::BANG, "!"),
+            (TokenType::MINUS, "-"),
+            (TokenType::SLASH, "/"),
+            (TokenType::ASTERISK, "*"),
+            (TokenType::Int, "5"),
+            (TokenType::Semicolon, ";"),
+            (TokenType::Int, "5"),
+            (TokenType::LT, "<"),
+            (TokenType::Int, "10"),
+            (TokenType::GT, ">"),
+            (TokenType::Int, "5"),
+            (TokenType::Semicolon, ";"),
+            (TokenType::If, "if"),
+            (TokenType::LParen, "("),
+            (TokenType::Int, "5"),
+            (TokenType::LT, "<"),
+            (TokenType::Int, "10"),
+            (TokenType::RParen, ")"),
+            (TokenType::LBrace, "{"),
+            (TokenType::Return, "return"),
+            (TokenType::True, "true"),
+            (TokenType::Semicolon, ";"),
+            (TokenType::RBrace, "}"),
+            (TokenType::Else, "else"),
+            (TokenType::LBrace, "{"),
+            (TokenType::Return, "return"),
+            (TokenType::False, "false"),
+            (TokenType::Semicolon, ";"),
+            (TokenType::RBrace, "}"),
+            (TokenType::Int, "10"),
+            (TokenType::EQ, "=="),
+            (TokenType::Int, "10"),
+            (TokenType::Semicolon, ";"),
+            (TokenType::Int, "10"),
+            (TokenType::NotEq, "!="),
+            (TokenType::Int, "9"),
+            (TokenType::Semicolon, ";"),
+            (TokenType::Eof, ""),
         ];
 
         let mut lexer = Lexer::new(input);
@@ -205,12 +205,9 @@ mod tests {
         for (i, (expected_token, expected_literal)) in tests.iter().enumerate() {
             let token = lexer.next_token();
             assert_eq!(
-                &token.type_,
-                &expected_token.to_string(),
+                token.type_, *expected_token,
                 "tests[{}] - tokentype wrong. expected={:?} , got ={:?}",
-                i,
-                expected_token,
-                token.type_
+                i, expected_token, token.type_
             );
 
             assert_eq!(

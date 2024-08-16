@@ -1,8 +1,6 @@
-use crate::lexer::token::lookup_ident;
+use super::token::{lookup_ident, Token, TokenType};
 
-use super::token::{Token, Tokens};
-
-pub(crate) struct Lexer {
+pub struct Lexer {
     input: String,
     position: usize,
     read_position: usize,
@@ -29,6 +27,7 @@ impl LexerTrait for Lexer {
         while self.ch.is_ascii_digit() {
             self.read_char();
         }
+        dbg!(&self.input[pos..self.position]);
         self.input[pos..self.position].to_string()
     }
 
@@ -61,55 +60,59 @@ impl LexerTrait for Lexer {
                 if self.peek_char() == b'=' {
                     self.read_char();
                     // let literal = "==".to_string();
-                    Token::new("EQ", "==")
+                    Token::new(TokenType::EQ, "==")
                 } else {
-                    Token::new("Assign", "=")
+                    dbg!("inside =");
+                    Token::new(TokenType::Assign, "=")
                 }
             }
-            b';' => Token::new("Semicolon", ";"),
-            b'(' => Token::new("LParen", "("),
-            b')' => Token::new("RParen", ")"),
-            b',' => Token::new("Comma", ","),
-            b'+' => Token::new("Plus", "+"),
-            b'{' => Token::new("LBrace", "{"),
-            b'}' => Token::new("RBrace", "}"),
+            b';' => {
+                println!("inside semi");
+                Token::new(TokenType::Semicolon, ";")
+            }
+            b'(' => Token::new(TokenType::LParen, "("),
+            b')' => Token::new(TokenType::RParen, ")"),
+            b',' => Token::new(TokenType::Comma, ","),
+            b'+' => Token::new(TokenType::Plus, "+"),
+            b'{' => Token::new(TokenType::LBrace, "{"),
+            b'}' => Token::new(TokenType::RBrace, "}"),
             b'!' => {
                 if self.peek_char() == b'=' {
                     // let ch = self.ch;
                     self.read_char();
                     // let literal = ch.to_string() + &self.ch.to_string();
                     let literal = "!=".to_string();
-                    Token::new("NotEq", &literal)
+                    Token::new(TokenType::NotEq, &literal)
                 } else {
-                    Token::new("BANG", "!")
+                    Token::new(TokenType::BANG, "!")
                 }
             }
-            b'*' => Token::new("ASTERISK", "*"),
-            b'<' => Token::new("LT", "<"),
-            b'>' => Token::new("GT", ">"),
-            b'/' => Token::new("SLASH", "/"),
-            b'-' => Token::new("MINUS", "-"),
+            b'*' => Token::new(TokenType::ASTERISK, "*"),
+            b'<' => Token::new(TokenType::LT, "<"),
+            b'>' => Token::new(TokenType::GT, ">"),
+            b'/' => Token::new(TokenType::SLASH, "/"),
+            b'-' => Token::new(TokenType::MINUS, "-"),
+            b'0'..=b'9' => {
+                let literal = self.read_number();
+                Token::new(TokenType::Int, &literal)
+            }
             _c if is_letter(self.ch) => {
                 let literal = self.read_identifier();
                 //can use lookup_ident() but this seems ok
                 //TODO: Check why this works
-                // let _type = lookup_ident(&literal);
+                let _type = lookup_ident(&literal);
                 // println!("literal {literal}");
                 // println!("type {_type}");
-                match literal.as_str() {
-                    "let" => Token::new("Let", &literal),
-                    "fn" => Token::new("Function", &literal),
-                    _ => Token::new("Ident", &literal),
-                }
-                // return Token::new(&_type.to_string(), &literal);
+                // match literal.as_str() {
+                //     "let" => Token::new(TokenType::Let, &literal),
+                //     "fn" => Token::new(TokenType::Function, &literal),
+                //     _ => Token::new(TokenType::Ident, &literal),
+                // }
+                return Token::new(_type, &literal);
             }
-            _ch if self.ch.is_ascii_digit() => {
-                let literal = self.read_number();
-                Token::new(&Tokens::Int(literal.clone()).to_string(), &literal)
-            }
-
-            b'\0' => Token::new(&Tokens::Eof.to_string(), ""),
-            _ => Token::new(&Tokens::Illegal.to_string(), "ILLEGAL"),
+            // _ch if is_digit(self.ch) => {
+            b'\0' => Token::new(TokenType::Eof, ""),
+            _ => Token::new(TokenType::Illegal, "ILLEGAL"),
         };
         self.read_char();
         tok
@@ -117,10 +120,11 @@ impl LexerTrait for Lexer {
 
     fn read_identifier(&mut self) -> String {
         let pos = self.position;
-        while is_letter(self.ch) {
+        while is_letter(self.ch) || self.ch.is_ascii_digit() {
             self.read_char();
         }
-        String::from(&self.input[pos..self.position])
+        // dbg!(&self.input[pos..self.position]);
+        String::from_utf8_lossy(self.input[pos..self.position].as_bytes()).to_string()
     }
 
     fn skip_whitespace(&mut self) {

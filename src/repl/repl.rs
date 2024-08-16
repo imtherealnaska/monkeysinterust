@@ -15,7 +15,7 @@ pub fn start<R: BufRead, W: Write>(input: R, mut output: W) {
 
         loop {
             let token = lexer.next_token();
-            if token.type_ == token::Tokens::Eof.to_string() {
+            if token.type_ == token::TokenType::Eof {
                 break;
             }
             writeln!(output, "{:?}", token).expect("failed to write to outpu");

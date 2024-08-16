@@ -1,6 +1,8 @@
 use std::{env, io, process::exit};
 
+pub mod ast;
 pub mod lexer;
+pub mod parser;
 pub mod repl;
 
 fn main() {
