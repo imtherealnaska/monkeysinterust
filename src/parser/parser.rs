@@ -29,10 +29,15 @@ impl Parser {
         if !self.expect_peek(TokenType::Assign) {
             return None;
         }
-
+        self.next_token();
         while !self.cur_token_is(TokenType::Semicolon) {
+            if self.cur_token_is(TokenType::Eof) {
+                return None;
+            }
             self.next_token()
         }
+
+        // self.next_token();
 
         Some(Rc::new(LetStatement {
             token,
