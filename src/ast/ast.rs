@@ -90,6 +90,26 @@ impl Expression for Identifier {
     fn expression_node(&self) {}
 }
 
+pub struct ReturnStatements {
+    pub token: Token,
+    pub value: Option<Rc<dyn Expression>>,
+}
+
+impl Statement for ReturnStatements {
+    fn statement_node(&self) {}
+}
+
+impl Node for ReturnStatements {
+    fn token_literal(&self) -> String {
+        self.token.literal.clone()
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
+//=======================Debug impls =================================
+
 use std::fmt;
 
 impl fmt::Debug for Program {
@@ -118,6 +138,17 @@ impl fmt::Debug for LetStatement {
             f,
             "LetStatement {{ name: {:?}, value: {:?} }}",
             self.name, self.value
+        )
+    }
+}
+
+// Implement Debug for ReturnStatements
+impl fmt::Debug for ReturnStatements {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "LetStatement {{ name: {:?}, value: {:?} }}",
+            self.token, self.value
         )
     }
 }
