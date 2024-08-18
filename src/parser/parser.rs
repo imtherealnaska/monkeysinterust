@@ -107,7 +107,7 @@ impl Parser {
         println!("Advanced to token: {:?}", self.cur_token);
     }
 
-    fn parse_program(&mut self) -> Program {
+    pub fn parse_program(&mut self) -> Program {
         let mut program = Program {
             statements: Vec::new(),
         };
@@ -245,7 +245,7 @@ let x = 5 ; let y = 10 ; let foobar = 838383 ;
         eprintln!("parser has {} errors", errs.len());
 
         for m in errs {
-            println!("parser error {}", m.msg);
+            eprintln!("parser error {}", m.msg);
         }
         panic!("Fix above issues");
     }

@@ -1,6 +1,7 @@
+use std::fmt::{self, Display};
 use std::{any::Any, rc::Rc};
 
-use crate::lexer::token::Token;
+use crate::lexer::token::{Token, TokenType};
 
 pub trait Node {
     fn token_literal(&self) -> String;
@@ -15,7 +16,7 @@ pub trait Statement: Node {
 }
 
 // Equivalent to Expression interface
-pub trait Expression: Node {
+pub trait Expression: Node + fmt::Display {
     fn expression_node(&self);
 }
 
@@ -108,9 +109,94 @@ impl Node for ReturnStatements {
         self
     }
 }
-//=======================Debug impls =================================
 
-use std::fmt;
+pub struct ExpressionStatement {
+    pub token: Token,
+    pub expr: Option<Rc<dyn Expression>>,
+}
+
+impl Node for ExpressionStatement {
+    fn token_literal(&self) -> String {
+        self.token.literal.clone()
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
+
+impl Statement for ExpressionStatement {
+    fn statement_node(&self) {}
+}
+//=======================Display impls =================================
+
+// impl fmt::Display for Program {
+//     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+
+//     }
+// }
+// use std::fmt::{self, Display};
+
+impl fmt::Display for dyn Statement {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        if let Some(let_stmt) = self.as_any().downcast_ref::<LetStatement>() {
+            write!(f, "{}", let_stmt)
+        } else if let Some(ret_stmt) = self.as_any().downcast_ref::<ReturnStatements>() {
+            write!(f, "{}", ret_stmt)
+        } else if let Some(expr_stmt) = self.as_any().downcast_ref::<ExpressionStatement>() {
+            write!(f, "{}", expr_stmt)
+        } else {
+            write!(f, "Unknown statement type")
+        }
+    }
+}
+
+impl Display for ReturnStatements {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} ", self.token_literal())?;
+        if let Some(value) = &self.value {
+            write!(f, "{}", value)?;
+        }
+        write!(f, ";")
+    }
+}
+
+impl Display for ExpressionStatement {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        if let Some(expr) = &self.expr {
+            write!(f, "{}", expr)
+        } else {
+            Ok(())
+        }
+    }
+}
+
+impl fmt::Display for Program {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        for stmt in &self.statements {
+            write!(f, "{}", stmt)?;
+        }
+        Ok(())
+    }
+}
+
+impl fmt::Display for LetStatement {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} {} = ", self.token.literal, self.name)?;
+        if let Some(value) = &self.value {
+            write!(f, "{}", value)?;
+        }
+        write!(f, ";")
+    }
+}
+
+impl fmt::Display for Identifier {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.value)
+    }
+}
+
+//=======================Debug impls =================================
 
 impl fmt::Debug for Program {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -165,4 +251,41 @@ impl fmt::Debug for dyn Expression {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "Expression({})", self.token_literal())
     }
+}
+
+#[test]
+fn test_program_string() {
+    let program = Program {
+        statements: vec![Rc::new(LetStatement {
+            token: Token {
+                type_: TokenType::Let,
+                literal: "let".to_string(),
+            },
+            name: Rc::new(Identifier {
+                token: Token {
+                    type_: TokenType::Ident,
+                    literal: "myVar".to_string(),
+                },
+                value: "myVar".to_string(),
+            }),
+            value: Some(Rc::new(Identifier {
+                token: Token {
+                    type_: TokenType::Ident,
+                    literal: "anotherVar".to_string(),
+                },
+                value: "anotherVar".to_string(),
+            }) as Rc<dyn Expression>),
+        }) as Rc<dyn Statement>],
+    };
+
+    println!("Program: {:?}", program);
+    println!("First statement: {:?}", program.statements[0]);
+    let actual_output = program.to_string();
+    println!("Actual output: '{}'", actual_output);
+
+    assert_eq!(
+        actual_output, "let myVar = anotherVar;",
+        "program.to_string() wrong. got='{}'",
+        actual_output
+    );
 }
