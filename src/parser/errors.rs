@@ -19,6 +19,7 @@ pub struct ParseError {
     pub msg: String,
 }
 
+
 impl ParseError {
     fn new(kind: ParseErrorKind, msg: String) -> Self {
         ParseError { kind, msg }

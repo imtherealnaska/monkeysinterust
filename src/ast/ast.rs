@@ -1,7 +1,7 @@
 use std::fmt::{self, Display};
 use std::{any::Any, rc::Rc};
 
-use crate::lexer::token::{Token, TokenType};
+use crate::lexer::token::Token;
 
 pub trait Node {
     fn token_literal(&self) -> String;
@@ -253,39 +253,46 @@ impl fmt::Debug for dyn Expression {
     }
 }
 
-#[test]
-fn test_program_string() {
-    let program = Program {
-        statements: vec![Rc::new(LetStatement {
-            token: Token {
-                type_: TokenType::Let,
-                literal: "let".to_string(),
-            },
-            name: Rc::new(Identifier {
-                token: Token {
-                    type_: TokenType::Ident,
-                    literal: "myVar".to_string(),
-                },
-                value: "myVar".to_string(),
-            }),
-            value: Some(Rc::new(Identifier {
-                token: Token {
-                    type_: TokenType::Ident,
-                    literal: "anotherVar".to_string(),
-                },
-                value: "anotherVar".to_string(),
-            }) as Rc<dyn Expression>),
-        }) as Rc<dyn Statement>],
-    };
 
-    println!("Program: {:?}", program);
-    println!("First statement: {:?}", program.statements[0]);
-    let actual_output = program.to_string();
-    println!("Actual output: '{}'", actual_output);
+#[cfg(test)]
+mod tests {
+    use crate::lexer::token::TokenType;
 
-    assert_eq!(
-        actual_output, "let myVar = anotherVar;",
-        "program.to_string() wrong. got='{}'",
-        actual_output
-    );
+    use super::*;
+    #[test]
+    fn test_program_string() {
+        let program = Program {
+            statements: vec![Rc::new(LetStatement {
+                token: Token {
+                    type_: TokenType::Let,
+                    literal: "let".to_string(),
+                },
+                name: Rc::new(Identifier {
+                    token: Token {
+                        type_: TokenType::Ident,
+                        literal: "myVar".to_string(),
+                    },
+                    value: "myVar".to_string(),
+                }),
+                value: Some(Rc::new(Identifier {
+                    token: Token {
+                        type_: TokenType::Ident,
+                        literal: "anotherVar".to_string(),
+                    },
+                    value: "anotherVar".to_string(),
+                }) as Rc<dyn Expression>),
+            }) as Rc<dyn Statement>],
+        };
+
+        println!("Program: {:?}", program);
+        println!("First statement: {:?}", program.statements[0]);
+        let actual_output = program.to_string();
+        println!("Actual output: '{}'", actual_output);
+
+        assert_eq!(
+            actual_output, "let myVar = anotherVar;",
+            "program.to_string() wrong. got='{}'",
+            actual_output
+        );
+    }
 }

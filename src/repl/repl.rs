@@ -11,6 +11,9 @@ pub fn start<R: BufRead, W: Write>(input: R, mut output: W) {
         write!(output, "{}", PROMPT).expect("Failed to write tot put ");
         output.flush().expect("failed to flush output");
 
+        // should change import structure 
+        // I dont need lexer::lexler::Lexer::new() 
+        //  lexer::Lexer::New() would be good
         let mut lexer = lexer::lexer::Lexer::new(&line);
 
         loop {

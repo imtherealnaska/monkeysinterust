@@ -1,6 +1,9 @@
+use std::collections::HashMap;
 use std::rc::Rc;
 
-use crate::ast::ast::{Identifier, LetStatement, ReturnStatements, Statement};
+use crate::ast::ast::{
+    self, ExpressionStatement, Identifier, LetStatement, ReturnStatements, Statement,
+};
 use crate::lexer::lexer::Lexer;
 use crate::lexer::token::TokenType;
 use crate::{
@@ -10,15 +13,36 @@ use crate::{
 
 use super::errors::{ParseError, ParseErrorKind, ParseErrors};
 
+type PrefixParseFn = fn() -> Box<dyn ast::Expression>;
+type InfixParseFn = fn(Box<dyn ast::Expression>) -> Box<dyn ast::Expression>;
+
+enum Predecessor {
+    LOWEST,
+    EQUALS,  // == LESSGREATER // > or <
+    SUM,     // +
+    PRODUCT, // *
+    PREFIX,  // -X or !X CALL // myFunction(X)
+}
+
 pub struct Parser {
     l: Lexer,
     cur_token: Token,
     peek_token: Token,
     errors: ParseErrors,
+    prefix_parse_fns: HashMap<TokenType, PrefixParseFn>,
+    infix_parse_fns: HashMap<TokenType, InfixParseFn>,
 }
 
 impl Parser {
-    pub fn parse_let_statement(&mut self) -> Option<Rc<LetStatement>> {
+    fn register_prefix(&mut self, token_type: TokenType, fn_use: PrefixParseFn) {
+        self.prefix_parse_fns.insert(token_type, fn_use);
+    }
+
+    fn register_infix(&mut self, token_type: TokenType, fn_use: InfixParseFn) {
+        self.infix_parse_fns.insert(token_type, fn_use);
+    }
+
+    fn parse_let_statement(&mut self) -> Option<Rc<LetStatement>> {
         println!("parsing let statement");
         let token = self.cur_token.clone();
 
@@ -52,7 +76,7 @@ impl Parser {
         }))
     }
 
-    pub fn parse_ret_statement(&mut self) -> Option<Rc<ReturnStatements>> {
+    fn parse_ret_statement(&mut self) -> Option<Rc<ReturnStatements>> {
         println!("parsing return statement");
         let token = self.cur_token.clone();
         self.next_token();
@@ -95,6 +119,8 @@ impl Parser {
                 literal: "".to_string(),
             },
             errors: vec![],
+            prefix_parse_fns: HashMap::new(),
+            infix_parse_fns: HashMap::new(),
         };
         p.next_token();
         p.next_token();
@@ -107,7 +133,7 @@ impl Parser {
         println!("Advanced to token: {:?}", self.cur_token);
     }
 
-    pub fn parse_program(&mut self) -> Program {
+    fn parse_program(&mut self) -> Program {
         let mut program = Program {
             statements: Vec::new(),
         };
@@ -130,7 +156,7 @@ impl Parser {
         match self.cur_token.type_ {
             TokenType::Let => self.parse_let_statement().map(|s| s as Rc<dyn Statement>),
             TokenType::Return => self.parse_ret_statement().map(|s| s as Rc<dyn Statement>),
-            _ => None,
+            _ => self.parse_expression_statement(),
         }
     }
 
@@ -150,19 +176,73 @@ impl Parser {
         println!("error_struct : {err_struct}");
         self.errors.push(err_struct);
     }
+
+    fn parse_expression_statement(&mut self) -> ast::ExpressionStatement {
+        let stmt = ExpressionStatement {
+            token: self.cur_token,
+            expr: Predecessor::LOWEST,
+        };
+
+        if self.peek_token_is(TokenType::Semicolon) {
+            self.next_token();
+        }
+        return stmt;
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use core::panic;
 
+    use ast::ExpressionStatement;
+
     use super::*;
     use crate::ast::ast::{Node, ReturnStatements};
+    use crate::lexer;
     use crate::{
         ast::ast::{LetStatement, Statement},
         lexer::lexer::Lexer,
         parser::parser::Parser,
     };
+
+    #[test]
+    fn test_identifier_expression() {
+        let input = "foobar;";
+        let l = lexer::lexer::Lexer::new(input);
+        let mut p = Parser::new(l);
+        let program = p.parse_program();
+        check_parser_errors(p);
+
+        assert_eq!(
+            program.statements.len(),
+            1,
+            "program does not have enough statements. got ={}",
+            program.statements.len()
+        );
+        let stmt = program.statements[0]
+            .as_any()
+            .downcast_ref::<ExpressionStatement>()
+            .expect("Program statement is not expresssion statement");
+
+        let ident = stmt
+            .as_any()
+            .downcast_ref::<Identifier>()
+            .expect("expression not identifier ");
+
+        assert_eq!(
+            ident.value, "foobar",
+            "ident value not {} got={}",
+            "foobar", ident.value
+        );
+
+        assert_eq!(
+            ident.token_literal(),
+            "foobar",
+            "ident token literal not {} got={}",
+            "foobar",
+            ident.token_literal()
+        );
+    }
 
     #[test]
     fn test_let_statements() {
